@@ -16,8 +16,8 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new(src: String, dst: String, amount: String) -> Self {
-        Self { src, dst, amount }
+    pub fn new(src: &str, dst: &str, amount: &str) -> Self {
+        Self { src: src.to_owned(), dst: dst.to_owned(), amount: amount.to_owned() }
     }
 }
 
