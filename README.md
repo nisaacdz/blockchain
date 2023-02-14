@@ -6,10 +6,11 @@ To use it on a custom struct, let your transaction struct implement Record which
 ## libraries used
 
 ### rust crates
-1. bincode
-2. serde
-3. sha2
-4. diesel
+bincode = "1.3.3"
+rusqlite = { version = "0.28.0", features = ["bundled"] }
+serde = { version="1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
+sha2 = "0.10.6"
 
 ### database
-5. PostgreSQL
+5. SQLite
