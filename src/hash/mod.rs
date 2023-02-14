@@ -1,4 +1,4 @@
-use std::{ops::Deref, fmt::Debug};
+use std::{ops::Deref, fmt::{Debug, Display}};
 
 use serde::Serialize;
 use sha2::{
@@ -10,19 +10,21 @@ use sha2::{
 };
 
 type Hxsh = GenericArray<u8, UInt<UInt<UInt<UInt<UInt<UInt<UTerm, B1>, B0>, B0>, B0>, B0>, B0>>;
+
+#[derive(PartialEq, Eq)]
 pub struct Hash {
     data: Hxsh,
 }
 
-impl Debug for Hash {
+impl Display for Hash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.as_slice().fmt(f)
     }
 }
 
-impl Hash {
-    fn new(data: Hxsh) -> Self {
-        Self { data }
+impl Debug for Hash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.as_slice().fmt(f)
     }
 }
 
