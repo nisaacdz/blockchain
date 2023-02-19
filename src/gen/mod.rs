@@ -54,8 +54,16 @@ pub fn validate<T: Sized + Serialize>(obj: T, hash: Hash) -> bool {
 }
 
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier};
-// Generates ed25519 key pairs in the form (public_key, private_key)
-//
+
+///
+///  Generates ed25519 key pairs in the form (public_key, private_key)
+///  # Example
+/// ```
+/// 
+/// let (public_key, private_key): (Vec<u8>, Vec<u8>) = gen::generate_key_pair();
+/// ```
+/// 
+
 pub fn generate_key_pair() -> (Vec<u8>, Vec<u8>) {
     // Generate a new key pair
     let mut c = rand::rngs::OsRng;

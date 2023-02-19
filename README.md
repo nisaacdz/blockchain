@@ -1,43 +1,65 @@
 # BLOCKCHAIN   
-This is a lightweight, general purpose blockchain crate built so that you may implement under your project.
 
-This projects makes use of trait objects which implies that in order to track an item as a block entity, you need to make that item implement the Record trait.
+# Rust Blockchain Implementation
 
-The record trait contains functions like hash and verify for obtaining the sha256 hash of the record object, verify for verifying if the given hash matches the current object's hash. There are a lot more default functions under the Record trait.
+This is a simple, lightweight blockchain implementation written in Rust that abstracts all the complexities associated with manipulating the blockchain so that you will only focus on your program logic.
 
-There crate provides a macro for generating block instances from the trait objects.
-The crate also provides a default transaction struct that you can use to test features.
-Since each individual records implement hash, the blocks themselves are not hashable.
+## Features
 
-You have the ability to implement the database of your choice
+- Uses the `rusqlite` crate for data storage and retrieval
+- Supports transaction signing and verification using ed25519
+- Uses the `bincode`, `serde` and `serde_json` crate for serialization and deserialization of data
+- Uses the `ed25519-dalek` for generating keys, signing records, verifying those records
+
+## Installation
+
+1. Install Rust and Cargo
+3. Run the following command to the crate to your project: `cargo add blockchain_dz`
 
 
-## libraries used
-### rust crates
-bincode = "1.3.3"
-ring = "0.16.20"
-serde = { version="1.0.152", features = ["derive"] }
-serde_json = "1.0.93"
-sha2 = "0.10.6"
+## Usage
 
-### database
-rusqlite = { version = "0.28.0", features = ["bundled"] }
+The blockchain implementation can be used to create and manage a decentralized ledger of transactions. Most functionalities are enabled through generics and traits so that you can wrap around your custom structs.
 
-## Example 1
+Transactions can be signed and verified using ed25519.
+
+`Record` types can be encrypted with sha256 or other algorithms
+
+`Record` types are signable into `SignedRecords` so block are not signable. A block will only be allowed on top of the blockchain if and only if all the SignedRecords contained within it are valid.
+
+The `blockchain` module provides the core functionality for creating and managing the blockchain, while the `io` module provides the interface for storing and retrieving blocks.
+
+The `gen` module wraps the hashing and key generation
+
+The `utils` module contains a simple `Transaction` struct mainly for the purpose of illustrating the core functionalities of this crate.
+
+## Contributing
+
+Contributions to this project are welcome. If you find a bug or want to suggest an improvement, please create an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License.
+
+
+
+## Example
 ```
-use blockchain::{utils::Transaction, block, blockchain::{Record, BlockChain}, gen, io::Database};
+use blockchain::{utils::Transaction, block, blockchain::{Record, BlockChain, SignedRecord, Block}, gen, io::{Database, TimeStamp}, errs::Errs};
 
     fn main() {
-        let mykeys = gen::generate_key_pair();
-        let trans = Transaction::new("A", "B", "2");
+        let mykeys: (Vec<u8>, Vec<u8>) = gen::generate_key_pair();
+        let trans: Transaction = Transaction::new("A", "B", "2");
 
-        let signed_record = trans.sign(&mykeys.1, &mykeys.0).unwrap();
-        let block = block![signed_record];
+        let signed_record: SignedRecord<Transaction> = trans.sign(&mykeys.1, &mykeys.0).unwrap();
+        let block: Block<Transaction> = block![signed_record];
 
-        let database = Database::open(None);
-        let chain = BlockChain::open(database);
+        // You can pass your database connection to this wrapper
+        let database: Database = Database::open(None);
 
-        let res = chain.push(block);
+        let chain: BlockChain = BlockChain::open(database);
+
+        let res: Result<TimeStamp, Errs> = chain.push(block);
 
         println!("{:?}", res);
 
