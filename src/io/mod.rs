@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 
-use crate::blockchain::{SignedRecord, Record, Block};
+use crate::blockchain::{Block, Record, SignedRecord};
 
 pub struct TimeStamp {
     begin: usize,
@@ -13,7 +13,9 @@ pub struct Database {
 
 impl Database {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_owned() }
+        Self {
+            path: path.to_owned(),
+        }
     }
     pub fn open(&self) -> Connection {
         // r"db\mydatabase.db"

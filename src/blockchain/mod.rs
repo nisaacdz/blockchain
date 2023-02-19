@@ -58,10 +58,10 @@ macro_rules! block {
     }
 }
 
-////
 ///
 ///
-/////
+///
+///
 ///
 ///
 ///
@@ -80,7 +80,6 @@ impl BlockChain {
         self.db.insert(block)
     }
 
-    //
     pub fn push<R: Record>(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
         if block.signed_records.iter().all(|r| r.is_valid()) {
             Ok(self.append(block))
