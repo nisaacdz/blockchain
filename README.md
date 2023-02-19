@@ -6,7 +6,7 @@ This projects makes use of trait objects which implies that in order to track an
 The record trait contains functions like hash and verify for obtaining the sha256 hash of the record object, verify for verifying if the given hash matches the current object's hash. There are a lot more default functions under the Record trait.
 
 There crate provides a macro for generating block instances from the trait objects.
-The crate also provides a default transaction struct that you can use to test features
+The crate also provides a default transaction struct that you can use to test features.
 Since each individual records implement hash, the blocks themselves are not hashable.
 
 
