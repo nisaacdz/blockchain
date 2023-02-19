@@ -1,2 +1,5 @@
 pub mod blockchain;
-pub mod hash;
+pub mod gen;
+pub mod utils;
+pub mod io;
+pub mod errs;
