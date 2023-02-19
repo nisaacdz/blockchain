@@ -1,4 +1,4 @@
-use ring::signature::Signature;
+use ed25519_dalek::Signature;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -50,10 +50,10 @@ pub struct Block<R: Record> {
 }
 #[macro_export]
 macro_rules! block {
-    ($($record:expr),*) => {
+    ($($signed_records:expr),*) => {
         {
-            let records = vec![$($record),*];
-            blockchain::blockchain::Block { records }
+            let signed_records = vec![$($signed_records),*];
+            blockchain::blockchain::Block { signed_records }
         }
     }
 }

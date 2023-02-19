@@ -1,5 +1,8 @@
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Errs {
-    InvalidKey,
+    InvalidPublicKey,
+    InvalidPrivateKey,
     InvalidBlock,
+    VerificationDoesNotMatch,
     Default,
 }

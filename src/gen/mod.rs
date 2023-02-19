@@ -53,30 +53,44 @@ pub fn validate<T: Sized + Serialize>(obj: T, hash: Hash) -> bool {
     hash.data == encrypt(obj).data
 }
 
-use ring::signature::{self, Ed25519KeyPair};
-use ring::{rand::SystemRandom, signature::Signature};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier};
+// Generates ed25519 key pairs in the form (public_key, private_key)
+//
+pub fn generate_key_pair() -> (Vec<u8>, Vec<u8>) {
+    // Generate a new key pair
+    let mut c = rand::rngs::OsRng;
+    let keypair = Keypair::generate(&mut c);
 
-pub fn generate_key_pair() -> Ed25519KeyPair {
-    let rng = SystemRandom::new();
-    let pkcs8 = Ed25519KeyPair::generate_pkcs8(&rng)
-        .unwrap()
-        .as_ref()
-        .to_vec();
-    Ed25519KeyPair::from_pkcs8(&pkcs8).unwrap()
+    // Serialize the private and public keys as byte vectors
+    let private_key = keypair.secret.to_bytes().to_vec();
+    let public_key = keypair.public.to_bytes().to_vec();
+
+    // Returns the public and private keys as byte vectors
+    (public_key, private_key)
 }
 
 pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, Errs> {
-    match Ed25519KeyPair::from_seed_unchecked(key) {
-        Ok(key) => Ok(key.sign(msg)),
-        Err(_) => Err(Errs::InvalidKey),
+    // Parse the private key
+    match SecretKey::from_bytes(key) {
+        Ok(secret) => {
+            // Create a signature for the message
+            let keypair = Keypair {
+                public: PublicKey::from(&secret),
+                secret,
+            };
+            let signature = keypair.sign(msg);
+            Ok(signature)
+        }
+        Err(_) => Err(Errs::InvalidPrivateKey),
     }
 }
 
 pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: Signature) -> Result<(), Errs> {
-    let key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key);
-    let signature = signature.as_ref().to_vec();
-    match key.verify(msg, &signature) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(Errs::Default),
+    match PublicKey::from_bytes(public_key) {
+        Ok(key) => match key.verify(msg, &signature) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Errs::VerificationDoesNotMatch),
+        },
+        Err(_) => Err(Errs::InvalidPublicKey),
     }
 }

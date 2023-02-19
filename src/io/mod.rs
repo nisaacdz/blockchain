@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 
-use crate::blockchain::{Block, Record, SignedRecord};
+use crate::blockchain::{Block, Record};
 
 pub struct TimeStamp {
     begin: usize,
