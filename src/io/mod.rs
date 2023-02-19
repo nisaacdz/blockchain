@@ -1,5 +1,7 @@
 use rusqlite::Connection;
 
+use crate::blockchain::{SignedRecord, Record, Block};
+
 pub struct TimeStamp {
     begin: usize,
     end: usize,
@@ -18,7 +20,7 @@ impl Database {
         Connection::open(&self.path).unwrap()
     }
 
-    pub fn insertRow() {
-        
+    pub fn insert<T: Record>(&self, block: Block<T>) -> TimeStamp {
+        unimplemented!()
     }
 }

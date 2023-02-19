@@ -1,4 +1,7 @@
-use std::{ops::Deref, fmt::{Debug, Display}};
+use std::{
+    fmt::{Debug, Display},
+    ops::Deref,
+};
 
 use serde::Serialize;
 use sha2::{
@@ -50,15 +53,17 @@ pub fn validate<T: Sized + Serialize>(obj: T, hash: Hash) -> bool {
     hash.data == encrypt(obj).data
 }
 
-use ring::{rand::SystemRandom, signature::Signature, agreement::UnparsedPublicKey };
 use ring::signature::{self, Ed25519KeyPair};
+use ring::{rand::SystemRandom, signature::Signature};
 
 pub fn generate_key_pair() -> Ed25519KeyPair {
     let rng = SystemRandom::new();
-    let pkcs8 = Ed25519KeyPair::generate_pkcs8(&rng).unwrap().as_ref().to_vec();
+    let pkcs8 = Ed25519KeyPair::generate_pkcs8(&rng)
+        .unwrap()
+        .as_ref()
+        .to_vec();
     Ed25519KeyPair::from_pkcs8(&pkcs8).unwrap()
 }
-
 
 pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, Errs> {
     match Ed25519KeyPair::from_seed_unchecked(key) {
@@ -67,9 +72,10 @@ pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, Errs> {
     }
 }
 
-pub fn verify_signature(public_key_bytes: &[u8], msg: &[u8], signature: &[u8]) -> Result<(), Errs> { 
-    let key =  signature::UnparsedPublicKey::new(&signature::ED25519, public_key_bytes);
-    match key.verify(msg, signature) {
+pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: Signature) -> Result<(), Errs> {
+    let key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key);
+    let signature = signature.as_ref().to_vec();
+    match key.verify(msg, &signature) {
         Ok(_) => Ok(()),
         Err(_) => Err(Errs::Default),
     }

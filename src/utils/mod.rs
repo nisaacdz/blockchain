@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::blockchain::Record;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Transaction {
     src: String,
     dst: String,

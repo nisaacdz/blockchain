@@ -9,17 +9,19 @@ There crate provides a macro for generating block instances from the trait objec
 The crate also provides a default transaction struct that you can use to test features.
 Since each individual records implement hash, the blocks themselves are not hashable.
 
+You have the ability to implement the database of your choice
+
 
 ## libraries used
 ### rust crates
-1. bincode = "1.3.3"
-2. rusqlite = { version = "0.28.0", features = ["bundled"] }
-3. serde = { version="1.0.152", features = ["derive"] }
-4. serde_json = "1.0.93"
-5. sha2 = "0.10.6"
+bincode = "1.3.3"
+ring = "0.16.20"
+serde = { version="1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
+sha2 = "0.10.6"
 
 ### database
-5. SQLite
+rusqlite = { version = "0.28.0", features = ["bundled"] }
 
 ## Example 1
 ```
