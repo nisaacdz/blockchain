@@ -25,48 +25,29 @@ rusqlite = { version = "0.28.0", features = ["bundled"] }
 
 ## Example 1
 ```
-use blockchain::{blockchain::{BlockChain, Transaction}, block};
+use blockchain::{utils::Transaction, block, blockchain::{Record, BlockChain}, gen, io::Database};
 
-fn main() {
-    let record1 = Transaction::new("Einstein", "Galileo", "5000");
-    let record2 = Transaction::new("Potter", "Ron", "5000");
+    fn main() {
+        let mykeys = gen::generate_key_pair();
+        let trans = Transaction::new("A", "B", "2");
 
-    let block = block![record1, record2];
-    // Creating a new instance of BlockChain only reestablishes connection 
-    // with the existing blockchain
-    let blockchain = BlockChain::new();
-    let stamp = blockchain.append(block);
-    println!("{}", stamp);
-}
-```
-Output1
-```
-$ cargo run
-   Compiling blockchain v0.1.0 (D:\workspace\rust\blockchain)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.82s
-     Running `target\debug\blockchain.exe`
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
-```
+        let signed_record = trans.sign(&mykeys.1, &mykeys.0).unwrap();
+        let block = block![signed_record];
 
-Here You may ignore the leading zeros and note 2.
-### Example 2
-```
-use blockchain::blockchain::{Block, BlockChain, TimeStamp, Transaction};
+        let database = Database::open(None);
+        let chain = BlockChain::open(database);
 
-fn main() {
-    let time = TimeStamp { value: 2/*The 2 from Output1/ };
-    let bc = BlockChain::new();
+        let res = chain.push(block);
 
-    let block: Block<Transaction> = bc.get_block(time);
-    println!("{:?}", block);
-}
-```
-Output2
-```
-$ cargo run
-   Compiling blockchain v0.1.0 (D:\workspace\rust\blockchain)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.12s
-     Running `target\debug\blockchain.exe`
-Block { records: [Transaction { src: "Einstein", dst: "Galileo", amount: "5000" }, Transaction { src: "Potter", dst: 
-"Ron", amount: "5000" }] }
+        println!("{:?}", res);
+
+        // DataBase structure
+        /*
+        TimeStamp -> Primary Key
+        Record -> encrypted or unencrypted message
+        Identity -> Public Key
+        Signature -> Digital Signature
+        // requires private key to decrypt the Record if the record is an encrypted one
+        */
+    }
 ```

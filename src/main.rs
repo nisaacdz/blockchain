@@ -14,8 +14,12 @@ fn main() {
 
     println!("{:?}", res);
 
-    ///***
-    /// 
-    /// 
-    ///  */
+    // DataBase structure
+    /*
+    TimeStamp -> Primary Key
+    Record -> encrypted or unencrypted message
+    Identity -> Public Key
+    Signature -> Digital Signature
+    // requires private key to decrypt the Record if the record is an encrypted one
+    */
 }
