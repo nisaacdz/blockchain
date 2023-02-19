@@ -6,21 +6,35 @@ pub struct TimeStamp {
     begin: usize,
     end: usize,
 }
+impl std::fmt::Debug for TimeStamp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TimeStamp")
+            .field("begin", &self.begin)
+            .field("end", &self.end)
+            .finish()
+    }
+}
 
 pub struct Database {
-    path: String,
+    connection: Option<Connection>,
 }
 
 impl Database {
-    pub fn new(path: &str) -> Self {
-        Self {
-            path: path.to_owned(),
-        }
-    }
-    pub fn open(&self) -> Connection {
+    pub fn open(connection: Option<Connection>) -> Self {
         // r"db\mydatabase.db"
-        Connection::open(&self.path).unwrap()
+        Self { connection }
     }
+
+    /*
+    pub fn verify(
+        &self,
+        message: &[u8],
+        signature: &ed25519::Signature
+    ) -> Result<(), SignatureError>
+    {
+        self.public.verify(message, signature)
+    }
+    */
 
     pub fn insert<T: Record>(&self, block: Block<T>) -> TimeStamp {
         unimplemented!()
