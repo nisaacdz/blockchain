@@ -1,42 +1,42 @@
-use rusqlite::Connection;
+use crate::{
+    blockchain::{Block, Record, SignedRecord},
+    errs::Errs,
+};
 
-use crate::blockchain::{Block, Record};
-
+#[derive(Debug, Copy, Clone)]
 pub struct TimeStamp {
-    begin: usize,
-    end: usize,
+    pub begin: i64,
+    pub end: i64,
 }
-impl std::fmt::Debug for TimeStamp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TimeStamp")
-            .field("begin", &self.begin)
-            .field("end", &self.end)
-            .finish()
+
+impl TimeStamp {
+    fn new(begin: i64, end: i64) -> Self {
+        Self { begin, end }
     }
 }
 
-pub struct Database {
-    connection: Option<Connection>,
-}
+pub trait Database<T>
+where
+    T: Record,
+{
+    fn establish_connection(&self) -> Result<(), Errs>;
+    fn insert_block(&self, block: Block<T>) -> Result<TimeStamp, Errs> {
+        let begin = self.next_stamp();
 
-impl Database {
-    pub fn open(connection: Option<Connection>) -> Self {
-        // r"db\mydatabase.db"
-        Self { connection }
-    }
+        let end = begin + block.size() - 1;
 
-    /*
-    pub fn verify(
-        &self,
-        message: &[u8],
-        signature: &ed25519::Signature
-    ) -> Result<(), SignatureError>
-    {
-        self.public.verify(message, signature)
-    }
-    */
+        let timestamp = TimeStamp::new(begin, end);
 
-    pub fn insert<T: Record>(&self, block: Block<T>) -> TimeStamp {
-        unimplemented!()
+        let mut count = begin;
+
+        for record in block.signed_records {
+            self.insert_row(record, count)
+                .map_err(|_| Errs::CouldNotInsertIntoDatabase)?;
+            count += 1;
+        }
+
+        Ok(timestamp)
     }
+    fn insert_row(&self, record: SignedRecord<T>, stamp: i64) -> Result<(), Errs>;
+    fn next_stamp(&self) -> i64;
 }

@@ -2,19 +2,19 @@
 
 # Rust Blockchain Implementation
 
-This is a simple, lightweight blockchain implementation written in Rust that abstracts all the complexities associated with manipulating the blockchain so that you will only focus on your program logic.
+This is a simple, lightweight blockchain implementation written in Rust that abstracts all the complexities associated with implementing and manipulating blockchain so that you will only focus on your program logic.
 
 ## Features
 
 - Uses the `rusqlite` crate for data storage and retrieval
 - Supports transaction signing and verification using ed25519
 - Uses the `bincode`, `serde` and `serde_json` crate for serialization and deserialization of data
-- Uses the `ed25519-dalek` for generating keys, signing records, verifying those records
+- Uses the `ed25519-dalek` for generating keys, signing records, and verifying those records
 
 ## Installation
 
 1. Install Rust and Cargo
-3. Run the following command to the crate to your project: `cargo add blockchain_dz`
+3. Run the following command to add the crate to your project: `cargo add blockchain_dz`
 
 
 ## Usage

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use ed25519_dalek::Signature;
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +24,18 @@ impl<T: Record> SignedRecord<T> {
 
     fn is_valid(&self) -> bool {
         self.verify().is_ok()
+    }
+
+    pub fn get_signature(&self) -> &Signature {
+        &self.signature
+    }
+
+    pub fn get_record(&self) -> &T {
+        &self.record
+    }
+
+    pub fn get_signer(&self) -> &Vec<u8> {
+        &self.public_key
     }
 }
 
@@ -58,37 +72,48 @@ macro_rules! block {
     }
 }
 
-///
-///
-///
-///
-///
-///
-///
-///
-
-pub struct BlockChain {
-    db: Database,
+impl<R: Record> Block<R> {
+    pub fn size(&self) -> i64 {
+        self.signed_records.len() as i64
+    }
 }
-impl BlockChain {
-    pub fn open(db: Database) -> Self {
+
+///
+///
+///
+///
+///
+///
+///
+///
+
+pub struct BlockChain<D: Database<R>, R: Record> {
+    database: D,
+    phantom_r: PhantomData<R>,
+}
+
+impl<D: Database<R>, R: Record> BlockChain<D, R> {
+    pub fn open(database: D) -> Self {
         //keys in the block chain are the timestamps, values is dbg!(block)
-        Self { db }
+        Self {
+            database,
+            phantom_r: PhantomData,
+        }
     }
 
-    fn append<R: Record>(&self, block: Block<R>) -> TimeStamp {
-        self.db.insert(block)
+    fn append(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
+        self.database.insert_block(block)
     }
 
-    pub fn push<R: Record>(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
+    pub fn push(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
         if block.signed_records.iter().all(|r| r.is_valid()) {
-            Ok(self.append(block))
+            self.append(block)
         } else {
             Err(Errs::InvalidBlock)
         }
     }
 
-    pub fn get_block<R: Record>(&self, _timestamp: TimeStamp) -> Block<R> {
+    pub fn get_block(&self, _timestamp: TimeStamp) -> Block<R> {
         unimplemented!()
     }
 }

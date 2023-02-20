@@ -1,27 +1,38 @@
-use blockchain::{utils::Transaction, block, blockchain::{Record, BlockChain, SignedRecord, Block}, gen, io::{Database, TimeStamp}, errs::Errs};
+use blockchain::{
+    block,
+    blockchain::{Block, BlockChain, Record, SignedRecord},
+    gen,
+    utils::{SqliteDB, Transaction},
+};
 
 fn main() {
-    let mykeys: (Vec<u8>, Vec<u8>) = gen::generate_key_pair();
-    let trans: Transaction = Transaction::new("A", "B", "2");
+    // (public key, private key)
+    let (public_key, private_key) = gen::generate_key_pair();
 
-    let signed_record: SignedRecord<Transaction> = trans.sign(&mykeys.1, &mykeys.0).unwrap();
-    let block: Block<Transaction> = block![signed_record];
+    let trans1: Transaction = Transaction::new("A", "B", "2");
+    let trans2: Transaction = Transaction::new("B", "A", "5");
+
+    let signed_trans1: SignedRecord<Transaction> = trans1.sign(&private_key, &public_key).unwrap();
+    let signed_trans2: SignedRecord<Transaction> = trans2.sign(&private_key, &public_key).unwrap();
+
+    let block: Block<Transaction> = block![signed_trans1, signed_trans2];
 
     // You can pass your database connection to this wrapper
-    let database: Database = Database::open(None);
+    let database: SqliteDB = SqliteDB::open(r"db\database.db").unwrap();
 
-    let chain: BlockChain = BlockChain::open(database);
+    let blockchain: BlockChain<SqliteDB, Transaction> = BlockChain::open(database);
 
-    let res: Result<TimeStamp, Errs> = chain.push(block);
-
-    println!("{:?}", res);
+    match blockchain.push(block) {
+        Ok(timestamp) => println!("Success! {:?}", timestamp),
+        Err(err) => println!("Failure! {:?}", err),
+    }
 
     // DataBase structure
     /*
-    TimeStamp -> Primary Key
-    Record -> encrypted or unencrypted message
-    Identity -> Public Key
-    Signature -> Digital Signature
+    TimeStamp -> Primary Key number
+    Record -> encrypted or unencrypted message text
+    Identity -> Public Key text
+    Signature -> Digital Signature text
     // requires private key to decrypt the Record if the record is an encrypted one
     */
 }

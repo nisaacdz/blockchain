@@ -5,4 +5,6 @@ pub enum Errs {
     InvalidBlock,
     VerificationDoesNotMatch,
     Default,
+    CouldNotInsertIntoDatabase,
+    CannotEstablishDatabaseConnection
 }
