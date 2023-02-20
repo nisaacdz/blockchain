@@ -13,8 +13,7 @@ This is a simple, lightweight blockchain implementation written in Rust that abs
 
 ## Installation
 
-1. Install Rust and Cargo
-3. Run the following command to add the crate to your project: `cargo add blockchain_dz`
+1. ________
 
 
 ## Usage
