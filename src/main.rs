@@ -23,7 +23,7 @@ fn main() {
     let blockchain: BlockChain<SqliteDB, Transaction> = BlockChain::open(database);
 
     match blockchain.push(block) {
-        Ok(block_position) => println!("Success! {:?}", block_position),
+        Ok(feedback) => println!("Success! {:?}", feedback),
         Err(err) => println!("Failure! {:?}", err),
     }
 

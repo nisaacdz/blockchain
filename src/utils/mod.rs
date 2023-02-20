@@ -5,7 +5,7 @@ use crate::{
     blockchain::{Record, SignedRecord},
     errs::Errs,
     gen::Hash,
-    io::{BlockPosition, Database},
+    io::{QueryRange, Database},
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -69,7 +69,7 @@ impl Database<Transaction> for SqliteDB {
         self.add_record(record, stamp)
     }
 
-    fn insert_hash(&self, hash: Hash, block_position: BlockPosition) -> Result<(), Errs> {
+    fn insert_hash(&self, hash: &Hash, block_position: QueryRange) -> Result<(), Errs> {
         let hash = hash.to_string();
         let block_position = serde_json::to_string(&block_position).unwrap();
 

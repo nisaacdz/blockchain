@@ -70,7 +70,7 @@ fn main() {
     let blockchain: BlockChain<SqliteDB, Transaction> = BlockChain::open(database);
 
     match blockchain.push(block) {
-        Ok(block_position) => println!("Success! {:?}", block_position),
+        Ok(feedback) => println!("Success! {:?}", feedback),
         Err(err) => println!("Failure! {:?}", err),
     }
 
@@ -89,6 +89,21 @@ fn main() {
     BlockPosition -> text
     */
 }
+
+
+
+```
+
+
+Sample Output
+
+```
+
+PS D:\workspace\rust\blockchain> cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
+     Running `target\debug\blockchain.exe`
+Success! FeedBack { block_position: QueryRange { begin: 4, end: 5 }, hash: [136, 62, 191, 230, 174, 233, 24, 32, 130, 97, 247, 86, 9, 138, 161, 243, 127, 183, 210, 135, 173, 174, 184, 84, 61, 197, 122, 13, 25, 33, 154, 72] }
+PS D:\workspace\rust\blockchain> 
 
 
 ```

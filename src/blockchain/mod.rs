@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, marker::PhantomData};
 
 use gen::Signature;
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,7 @@ use crate::{
     errs::Errs,
     gen,
     gen::Hash,
-    io::{BlockPosition, Database},
+    io::{Database, QueryRange},
 };
 
 #[derive(Debug, Serialize)]
@@ -100,6 +100,20 @@ impl<R: Record> VerifiedBlock<R> {
     }
 }
 
+pub struct FeedBack {
+    pub block_position: QueryRange,
+    pub hash: Hash,
+}
+
+impl Debug for FeedBack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FeedBack")
+            .field("block_position", &self.block_position)
+            .field("hash", &self.hash)
+            .finish()
+    }
+}
+
 ///
 ///
 ///
@@ -123,22 +137,29 @@ impl<D: Database<R>, R: Record> BlockChain<D, R> {
         }
     }
 
-    fn append(&self, block: Block<R>) -> Result<BlockPosition, Errs> {
+    fn append(&self, block: Block<R>) -> Result<QueryRange, Errs> {
         self.database.insert_block(block)
     }
 
-    fn record(&self, hash: Hash, block_position: BlockPosition) -> Result<(), Errs> {
+    fn record(&self, hash: &Hash, block_position: QueryRange) -> Result<(), Errs> {
         self.database.insert_hash(hash, block_position)
     }
 
-    pub fn push(&self, block: Block<R>) -> Result<BlockPosition, Errs> {
+    pub fn push(&self, block: Block<R>) -> Result<FeedBack, Errs> {
         let VerifiedBlock { hash, block } = block.verify()?;
         let block_position = self.append(block)?;
-        self.record(hash, block_position)?;
-        Ok(block_position)
+        self.record(&hash, block_position)?;
+        Ok(FeedBack {
+            hash,
+            block_position,
+        })
     }
 
-    pub fn get_block(&self, _block_position: BlockPosition) -> Block<R> {
+    pub fn get_records(&self, _block_position: QueryRange) -> Block<R> {
+        unimplemented!()
+    }
+
+    pub fn get_block(&self, _hash: &Hash) -> Block<R> {
         unimplemented!()
     }
 }
