@@ -23,16 +23,22 @@ fn main() {
     let blockchain: BlockChain<SqliteDB, Transaction> = BlockChain::open(database);
 
     match blockchain.push(block) {
-        Ok(timestamp) => println!("Success! {:?}", timestamp),
+        Ok(block_position) => println!("Success! {:?}", block_position),
         Err(err) => println!("Failure! {:?}", err),
     }
 
     // DataBase structure
+
+    //Table 1 name = records
     /*
-    TimeStamp -> Primary Key number
+    Position -> Primary Key number
     Record -> encrypted or unencrypted message text
     Identity -> Public Key text
     Signature -> Digital Signature text
     // requires private key to decrypt the Record if the record is an encrypted one
+
+    //Table 2 name = hash
+    Hash -> Primary Key text
+    BlockPosition -> text
     */
 }

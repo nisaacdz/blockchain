@@ -1,7 +1,12 @@
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
-use crate::{blockchain::{Record, SignedRecord}, errs::Errs, io::Database};
+use crate::{
+    blockchain::{Record, SignedRecord},
+    errs::Errs,
+    gen::Hash,
+    io::{BlockPosition, Database},
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Transaction {
@@ -26,21 +31,9 @@ pub struct SqliteDB {
 
 impl SqliteDB {
     pub fn open(path: &str) -> Result<Self, Errs> {
-        Ok(Self { con: Connection::open(path).map_err(|_| Errs::CannotEstablishDatabaseConnection)? })
-    }
-
-    pub fn create_table(&self) -> Result<(), Errs> {
-        self.con.execute(
-            "CREATE TABLE IF NOT EXISTS transactionchain (
-                TimeStamp INTEGER PRIMARY KEY,
-                Record TEXT,
-                Identity TEXT,
-                Signature TEXT
-            )",
-            params![],
-        ).unwrap();
-    
-        Ok(())
+        Ok(Self {
+            con: Connection::open(path).map_err(|_| Errs::CannotEstablishDatabaseConnection)?,
+        })
     }
 
     fn add_record<R: Record>(&self, record: SignedRecord<R>, stamp: i64) -> Result<(), Errs> {
@@ -48,15 +41,16 @@ impl SqliteDB {
         let signature = serde_json::to_string(record.get_signature().as_ref()).unwrap();
         let id = serde_json::to_string(record.get_signer()).unwrap();
 
-        self.con.execute(
-            "INSERT INTO transactionchain (TimeStamp, Record, Identity, Signature) VALUES (?, ?, ?, ?)",
-            params![stamp, rstring, id, signature],
-        ).map_err(|_| Errs::CouldNotInsertIntoDatabase)?;
-        
+        self.con
+            .execute(
+                "INSERT INTO records (Position, Record, Identity, Signature) VALUES (?, ?, ?, ?)",
+                params![stamp, rstring, id, signature],
+            )
+            .map_err(|_| Errs::CouldNotInsertRecordsIntoDatabase)?;
+
         Ok(())
     }
 }
-
 
 impl Record for Transaction {}
 
@@ -66,7 +60,7 @@ impl Database<Transaction> for SqliteDB {
     }
 
     fn next_stamp(&self) -> i64 {
-        let mut stmt = self.con.prepare(&"SELECT COUNT(*) FROM transactionchain").unwrap();
+        let mut stmt = self.con.prepare(&"SELECT COUNT(*) FROM records").unwrap();
         let count = stmt.query_row([], |row| row.get(0)).unwrap();
         count
     }
@@ -75,5 +69,17 @@ impl Database<Transaction> for SqliteDB {
         self.add_record(record, stamp)
     }
 
-}
+    fn insert_hash(&self, hash: Hash, block_position: BlockPosition) -> Result<(), Errs> {
+        let hash = hash.to_string();
+        let block_position = serde_json::to_string(&block_position).unwrap();
 
+        self.con
+            .execute(
+                "INSERT INTO hash (Hash, BlockPosition) VALUES (?, ?)",
+                params![hash, block_position],
+            )
+            .map_err(|_| Errs::CouldNotInsertHashIntoDatabase)?;
+
+        Ok(())
+    }
+}

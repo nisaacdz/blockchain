@@ -1,15 +1,16 @@
 use std::marker::PhantomData;
 
-use ed25519_dalek::Signature;
+use gen::Signature;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     errs::Errs,
     gen,
     gen::Hash,
-    io::{Database, TimeStamp},
+    io::{BlockPosition, Database},
 };
 
+#[derive(Debug, Serialize)]
 pub struct SignedRecord<T: Record> {
     pub public_key: Vec<u8>,
     pub signature: Signature,
@@ -19,7 +20,7 @@ pub struct SignedRecord<T: Record> {
 impl<T: Record> SignedRecord<T> {
     fn verify(&self) -> Result<(), Errs> {
         let msg = bincode::serialize(&self.record).unwrap();
-        gen::verify_signature(&self.public_key, &msg, self.signature)
+        gen::verify_signature(&self.public_key, &msg, &self.signature)
     }
 
     fn is_valid(&self) -> bool {
@@ -43,10 +44,6 @@ pub trait Record
 where
     Self: Clone + Sized + Serialize + for<'a> Deserialize<'a>,
 {
-    fn hash(&self) -> Hash {
-        gen::encrypt(self)
-    }
-
     fn sign(&self, private_key: &[u8], public_key: &[u8]) -> Result<SignedRecord<Self>, Errs> {
         let msg = bincode::serialize(self).unwrap();
         let signature = gen::sign(&msg, private_key)?;
@@ -59,6 +56,7 @@ where
     }
 }
 
+#[derive(Debug, Serialize)]
 pub struct Block<R: Record> {
     pub signed_records: Vec<SignedRecord<R>>,
 }
@@ -75,6 +73,30 @@ macro_rules! block {
 impl<R: Record> Block<R> {
     pub fn size(&self) -> i64 {
         self.signed_records.len() as i64
+    }
+
+    pub fn verify(self) -> Result<VerifiedBlock<R>, Errs> {
+        if self.signed_records.iter().all(|r| r.is_valid()) {
+            let hash = gen::encrypt(&self);
+            Ok(VerifiedBlock { hash, block: self })
+        } else {
+            Err(Errs::InvalidBlock)
+        }
+    }
+}
+
+pub struct VerifiedBlock<R: Record> {
+    hash: Hash,
+    block: Block<R>,
+}
+
+impl<R: Record> VerifiedBlock<R> {
+    pub fn get_hash(&self) -> &Hash {
+        &self.hash
+    }
+
+    pub fn get_block(&self) -> &Block<R> {
+        &self.block
     }
 }
 
@@ -94,26 +116,29 @@ pub struct BlockChain<D: Database<R>, R: Record> {
 
 impl<D: Database<R>, R: Record> BlockChain<D, R> {
     pub fn open(database: D) -> Self {
-        //keys in the block chain are the timestamps, values is dbg!(block)
+        //keys in the block chain are the BlockPositions, values is dbg!(block)
         Self {
             database,
             phantom_r: PhantomData,
         }
     }
 
-    fn append(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
+    fn append(&self, block: Block<R>) -> Result<BlockPosition, Errs> {
         self.database.insert_block(block)
     }
 
-    pub fn push(&self, block: Block<R>) -> Result<TimeStamp, Errs> {
-        if block.signed_records.iter().all(|r| r.is_valid()) {
-            self.append(block)
-        } else {
-            Err(Errs::InvalidBlock)
-        }
+    fn record(&self, hash: Hash, block_position: BlockPosition) -> Result<(), Errs> {
+        self.database.insert_hash(hash, block_position)
     }
 
-    pub fn get_block(&self, _timestamp: TimeStamp) -> Block<R> {
+    pub fn push(&self, block: Block<R>) -> Result<BlockPosition, Errs> {
+        let VerifiedBlock { hash, block } = block.verify()?;
+        let block_position = self.append(block)?;
+        self.record(hash, block_position)?;
+        Ok(block_position)
+    }
+
+    pub fn get_block(&self, _block_position: BlockPosition) -> Block<R> {
         unimplemented!()
     }
 }

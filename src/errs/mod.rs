@@ -5,6 +5,9 @@ pub enum Errs {
     InvalidBlock,
     VerificationDoesNotMatch,
     Default,
-    CouldNotInsertIntoDatabase,
-    CannotEstablishDatabaseConnection
+    CouldNotInsertRecordsIntoDatabase,
+    CouldNotInsertHashIntoDatabase,
+    CannotEstablishDatabaseConnection,
+    NoSuchTableInDatabase,
+    InvalidSignature,
 }
