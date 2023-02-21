@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Errs {
+pub enum CustomErrs {
     InvalidPublicKey,
     InvalidPrivateKey,
     InvalidBlock,
@@ -10,4 +10,5 @@ pub enum Errs {
     CannotEstablishDatabaseConnection,
     NoSuchTableInDatabase,
     InvalidSignature,
+    EmptyBlocksNotAllowed,
 }

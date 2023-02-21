@@ -2,7 +2,7 @@
 
 # Rust Blockchain Implementation
 
-This is a simple, lightweight blockchain implementation written in Rust that abstracts all the complexities associated with implementing and manipulating blockchain so that you will only focus on your program logic.
+This is a simple, lightweight blockchain implementation written in Rust that abstracts all the complexities associated with implementing and manipulating blockchain so that you only have to focus on your program logic.
 
 ## Features
 
@@ -18,23 +18,38 @@ This is a simple, lightweight blockchain implementation written in Rust that abs
 
 ## Usage
 
-The blockchain implementation can be used to create and manage a decentralized ledger of transactions. Most functionalities are enabled through generics and traits so that you can wrap around your custom structs.
+The blockchain implementation can be used to create and manage a decentralized ledger of transactions. Most functionalities are enabled through generics and traits. 
+
+
+To get started, check the documentations to see which traits to implement and which types to use in the generic structs
+
 
 Transactions can be signed and verified using ed25519.
 
 `Record` types can be encrypted with sha256 or other algorithms
 
-`Record` types are signable into `SignedRecords` so block are not signable. A block will only be allowed on top of the blockchain if and only if all the SignedRecords contained within it are valid.
 
-The `blockchain` module provides the core functionality for creating and managing the blockchain, while the `io` module provides the interface for storing and retrieving blocks.
+`Record` types are signable into `SignedRecords`.
+
+`Block` types consist of one or more `SignedRecords`.
+
+`Block` types can be verified and placed on the blockchain.
+
+The `blockchain` module provides the core functionality for creating and managing the blockchain.
+
+The `io` module provides the interface for storing and retrieving blocks.
 
 The `gen` module wraps the hashing and key generation
 
-The `utils` module contains a simple `Transaction` struct mainly for the purpose of illustrating the core functionalities of this crate.
+The `utils` module contains a simple implementations that you will find handy.
+
+The `errs` module contains custom `Err` types used in the crate.
+
 
 ## Contributing
 
 Contributions to this project are welcome. If you find a bug or want to suggest an improvement, please create an issue or submit a pull request.
+
 
 ## License
 
@@ -43,6 +58,7 @@ This project is licensed under the MIT License.
 
 
 ## Example
+
 ```
 
 use blockchain::{
@@ -95,15 +111,11 @@ fn main() {
 ```
 
 
-Sample Output
+Output
 
 ```
 
-PS D:\workspace\rust\blockchain> cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
-     Running `target\debug\blockchain.exe`
 Success! FeedBack { block_position: QueryRange { begin: 4, end: 5 }, hash: [136, 62, 191, 230, 174, 233, 24, 32, 130, 97, 247, 86, 9, 138, 161, 243, 127, 183, 210, 135, 173, 174, 184, 84, 61, 197, 122, 13, 25, 33, 154, 72] }
-PS D:\workspace\rust\blockchain> 
 
 
 ```

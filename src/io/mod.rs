@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::{
     blockchain::{Block, Record, SignedRecord},
-    errs::Errs,
+    errs::CustomErrs,
     gen::Hash,
 };
 
@@ -22,8 +22,8 @@ pub trait Database<T>
 where
     T: Record,
 {
-    fn establish_connection(&self) -> Result<(), Errs>;
-    fn insert_block(&self, block: Block<T>) -> Result<QueryRange, Errs> {
+    fn establish_connection(&self) -> Result<(), CustomErrs>;
+    fn insert_block(&self, block: Block<T>) -> Result<QueryRange, CustomErrs> {
         let begin = self.next_stamp();
 
         let end = begin + block.size() - 1;
@@ -39,7 +39,7 @@ where
 
         Ok(block_position)
     }
-    fn insert_row(&self, record: SignedRecord<T>, stamp: i64) -> Result<(), Errs>;
-    fn insert_hash(&self, hash: &Hash, block_position: QueryRange) -> Result<(), Errs>;
+    fn insert_row(&self, record: SignedRecord<T>, stamp: i64) -> Result<(), CustomErrs>;
+    fn insert_hash(&self, hash: &Hash, block_position: QueryRange) -> Result<(), CustomErrs>;
     fn next_stamp(&self) -> i64;
 }

@@ -9,7 +9,7 @@ use sha2::{
     Digest, Sha256,
 };
 
-use crate::errs::Errs;
+use crate::errs::CustomErrs;
 
 type Hxsh = GenericArray<u8, UInt<UInt<UInt<UInt<UInt<UInt<UTerm, B1>, B0>, B0>, B0>, B0>, B0>>;
 
@@ -52,7 +52,7 @@ pub fn validate<T: Sized + Serialize>(obj: &T, hash: Hash) -> bool {
 
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature as D_Signature, Signer, Verifier};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Signature {
     pub data: Vec<u8>,
 }
@@ -67,8 +67,8 @@ impl Signature {
         }
     }
 
-    pub fn to_dalek(&self) -> Result<D_Signature, Errs> {
-        let dalek = D_Signature::from_bytes(&self.data).map_err(|_| Errs::InvalidSignature)?;
+    pub fn to_dalek(&self) -> Result<D_Signature, CustomErrs> {
+        let dalek = D_Signature::from_bytes(&self.data).map_err(|_| CustomErrs::InvalidSignature)?;
         Ok(dalek)
     }
 
@@ -99,7 +99,7 @@ pub fn generate_key_pair() -> (Vec<u8>, Vec<u8>) {
     (public_key, private_key)
 }
 
-pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, Errs> {
+pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, CustomErrs> {
     // Parse the private key
     match SecretKey::from_bytes(key) {
         Ok(secret) => {
@@ -111,17 +111,17 @@ pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, Errs> {
             let signature: D_Signature = keypair.sign(msg);
             Ok(Signature::from(signature))
         }
-        Err(_) => Err(Errs::InvalidPrivateKey),
+        Err(_) => Err(CustomErrs::InvalidPrivateKey),
     }
 }
 
-pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: &Signature) -> Result<(), Errs> {
+pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: &Signature) -> Result<(), CustomErrs> {
     let dalek = signature.to_dalek()?;
     match PublicKey::from_bytes(public_key) {
         Ok(key) => match key.verify(msg, &dalek) {
             Ok(_) => Ok(()),
-            Err(_) => Err(Errs::VerificationDoesNotMatch),
+            Err(_) => Err(CustomErrs::VerificationDoesNotMatch),
         },
-        Err(_) => Err(Errs::InvalidPublicKey),
+        Err(_) => Err(CustomErrs::InvalidPublicKey),
     }
 }
