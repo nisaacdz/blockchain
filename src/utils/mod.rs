@@ -3,10 +3,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     block,
-    blockchain::{Block, Record, SignedRecord},
+    blockchain::{Block, FeedBack, Record, SignedRecord},
     errs::CustomErrs,
     gen::Hash,
     io::{Database, QueryRange},
+    node::NodeId,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -21,6 +22,7 @@ pub trait Entity<T: Record> {
     fn sign_record(&self, record: T, pkey: &[u8]) -> Result<SignedRecord<T>, CustomErrs> {
         record.sign(pkey, &self.public_key())
     }
+    fn receive_broadcast(&self, block: &FeedBack<T>, from_node: NodeId);
 }
 
 pub struct Miner<T: Record> {
@@ -71,7 +73,11 @@ impl SqliteDB {
         })
     }
 
-    fn add_record<R: Record>(&self, record: SignedRecord<R>, stamp: i64) -> Result<(), CustomErrs> {
+    fn add_record<R: Record>(
+        &self,
+        record: &SignedRecord<R>,
+        stamp: i64,
+    ) -> Result<(), CustomErrs> {
         let rstring: String = serde_json::to_string(record.get_record()).unwrap();
         let signature = serde_json::to_string(record.get_signature().as_ref()).unwrap();
         let id = serde_json::to_string(record.get_signer()).unwrap();
@@ -100,7 +106,7 @@ impl Database<Transaction> for SqliteDB {
         count
     }
 
-    fn insert_row(&self, record: SignedRecord<Transaction>, stamp: i64) -> Result<(), CustomErrs> {
+    fn insert_row(&self, record: &SignedRecord<Transaction>, stamp: i64) -> Result<(), CustomErrs> {
         self.add_record(record, stamp)
     }
 

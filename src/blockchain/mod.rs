@@ -108,9 +108,16 @@ impl<R: Record> VerifiedBlock<R> {
 }
 
 #[derive(Debug)]
-pub struct FeedBack {
+pub struct FeedBack<R: Record> {
     pub block_position: QueryRange,
     pub hash: Hash,
+    pub block: Block<R>,
+}
+
+impl<R: Record> FeedBack<R> {
+    pub fn get_block(&self) -> &Block<R> {
+        &self.block
+    }
 }
 
 ///
@@ -135,7 +142,7 @@ impl<D: Database<R>, R: Record> BlockChain<D, R> {
         }
     }
 
-    fn append(&self, block: Block<R>) -> Result<QueryRange, CustomErrs> {
+    fn append(&self, block: &Block<R>) -> Result<QueryRange, CustomErrs> {
         self.database.insert_block(block)
     }
 
@@ -143,16 +150,17 @@ impl<D: Database<R>, R: Record> BlockChain<D, R> {
         self.database.insert_hash(hash, block_position)
     }
 
-    pub fn push(&self, block: Block<R>) -> Result<FeedBack, CustomErrs> {
+    pub fn push(&self, block: Block<R>) -> Result<FeedBack<R>, CustomErrs> {
         if block.signed_records.is_empty() {
             return Err(CustomErrs::EmptyBlocksNotAllowed);
         }
 
         let VerifiedBlock { hash, block } = block.verify()?;
-        let block_position = self.append(block)?;
+        let block_position = self.append(&block)?;
         self.record(&hash, block_position)?;
         Ok(FeedBack {
             hash,
+            block,
             block_position,
         })
     }
