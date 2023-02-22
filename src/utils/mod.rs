@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
@@ -18,23 +16,10 @@ pub struct Transaction {
     amount: String,
 }
 
-pub struct Entity<T: Record> {
-    pub public_key: Vec<u8>,
-    phantom_data: PhantomData<T>,
-}
-
-impl<T: Record> Entity<T> {
-    pub fn create() -> Self {
-        todo!()
-    }
-    pub fn public_key(&self) -> &[u8] {
-        &self.public_key
-    }
-    pub fn document_record(&self) -> T {
-        todo!()
-    }
-    pub fn sign_record(&self, record: T, pkey: &[u8]) -> Result<SignedRecord<T>, CustomErrs> {
-        record.sign(pkey, &self.public_key)
+pub trait Entity<T: Record> {
+    fn public_key(&self) -> &[u8];
+    fn sign_record(&self, record: T, pkey: &[u8]) -> Result<SignedRecord<T>, CustomErrs> {
+        record.sign(pkey, &self.public_key())
     }
 }
 
