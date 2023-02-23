@@ -17,6 +17,7 @@ pub struct NodeId {
     address: String,
 }
 
+
 pub struct Node<D: Database<R>, R: Record> {
     /// An instance of the blockchain held by this node
     pub chain: Arc<Mutex<BlockChain<D, R>>>,
@@ -37,6 +38,10 @@ pub struct Node<D: Database<R>, R: Record> {
 
     /// A blockchain that contains transactions between peers in this node
     pub local_chain: BlockChain<D, R>,
+
+    /// Network of nodes connected to this node
+    /// A network can be for diverse purposes
+    pub network: Arc<Mutex<Vec<NodeId>>>,
 }
 
 impl<D: Database<R>, R: Record> Node<D, R> {
@@ -48,6 +53,7 @@ impl<D: Database<R>, R: Record> Node<D, R> {
             mem_pool: todo!(),
             transactions: todo!(),
             local_chain: todo!(),
+            network: todo!(),
         }
     }
 
@@ -67,7 +73,7 @@ impl<D: Database<R>, R: Record> Node<D, R> {
     }
 
     pub fn publish_block(&self, block: Block<R>) -> Result<FeedBack<R>, CustomErrs> {
-        self.chain.lock().unwrap().push(block)
+        self.chain.lock().unwrap().push(&block)
     }
 
     pub fn synchronize(&self) -> bool {
@@ -75,6 +81,6 @@ impl<D: Database<R>, R: Record> Node<D, R> {
     }
 
     pub fn push_local(&self, block: &Block<R>) -> Result<FeedBack<R>, CustomErrs> {
-        todo!()
+        self.local_chain.push(block)
     }
 }

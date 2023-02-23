@@ -82,10 +82,13 @@ impl<R: Record> Block<R> {
         self.signed_records.len() as i64
     }
 
-    pub fn verify(self) -> Result<VerifiedBlock<R>, CustomErrs> {
+    pub fn verify(&self) -> Result<VerifiedBlock<R>, CustomErrs> {
         if self.signed_records.iter().all(|r| r.is_valid()) {
             let hash = gen::encrypt(&self);
-            Ok(VerifiedBlock { hash, block: self })
+            Ok(VerifiedBlock {
+                hash,
+                block: self.clone(),
+            })
         } else {
             Err(CustomErrs::InvalidBlock)
         }
@@ -150,7 +153,7 @@ impl<D: Database<R>, R: Record> BlockChain<D, R> {
         self.database.insert_hash(hash, block_position)
     }
 
-    pub fn push(&self, block: Block<R>) -> Result<FeedBack<R>, CustomErrs> {
+    pub fn push(&self, block: &Block<R>) -> Result<FeedBack<R>, CustomErrs> {
         if block.signed_records.is_empty() {
             return Err(CustomErrs::EmptyBlocksNotAllowed);
         }
@@ -160,7 +163,7 @@ impl<D: Database<R>, R: Record> BlockChain<D, R> {
         self.record(&hash, block_position)?;
         Ok(FeedBack {
             hash,
-            block,
+            block: block.clone(),
             block_position,
         })
     }
