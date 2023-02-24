@@ -321,7 +321,7 @@ impl<D: Database2> BlockChain<D> {
         })
     }
 
-    pub fn get_records<R: Record>(&self, _block_position: QueryRange) -> Block<R> {
+    pub fn get_records<R: Record>(&self, _block_position: QueryRange) -> Vec<SignedRecord<R>> {
         unimplemented!()
     }
 
