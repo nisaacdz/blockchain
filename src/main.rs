@@ -17,7 +17,7 @@ fn main() {
 
     let block: Block<Transaction> = block![signed_trans1, signed_trans2];
 
-    let mut blockchain: BlockChain<SqliteDB2> = BlockChain::open(SqliteDB2::new(r"db\database.db"));
+    let mut blockchain: BlockChain<SqliteDB2> = BlockChain::open(SqliteDB2::new(r"db\data.db"));
 
     match blockchain.push(&block) {
         Ok(feedback) => println!("Success! {:?}", feedback),
