@@ -11,4 +11,6 @@ pub enum CustomErrs {
     NoSuchTableInDatabase,
     InvalidSignature,
     EmptyBlocksNotAllowed,
+    NoDatabaseConnected,
+    CannotCreateSuchTable,
 }

@@ -1,12 +1,13 @@
-use rusqlite::{params, Connection};
+use std::collections::HashSet;
+
+use rusqlite::{params, Connection, ToSql};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     block,
-    blockchain::{Block, FeedBack, Record, SignedRecord},
+    blockchain::{Block, FeedBack, PublishedBlock, Record, SignedRecord},
     errs::CustomErrs,
-    gen::Hash,
-    io::{Database, QueryRange},
+    io::{Database, Database2, DatabaseInsertable},
     node::NodeId,
 };
 
@@ -110,17 +111,94 @@ impl Database<Transaction> for SqliteDB {
         self.add_record(record, stamp)
     }
 
-    fn insert_hash(&self, hash: &Hash, block_position: QueryRange) -> Result<(), CustomErrs> {
-        let hash = hash.to_string();
-        let block_position = serde_json::to_string(&block_position).unwrap();
+    fn insert_hash(&self, published_block: PublishedBlock) -> Result<(), CustomErrs> {
+        let s = published_block.into_iter().next().unwrap();
 
         self.con
             .execute(
                 "INSERT INTO hash (Hash, BlockPosition) VALUES (?, ?)",
-                params![hash, block_position],
+                params![s[0], s[1]],
             )
             .map_err(|_| CustomErrs::CouldNotInsertHashIntoDatabase)?;
 
         Ok(())
+    }
+}
+
+pub struct SqliteDB2 {
+    tables: HashSet<String>,
+    connection: Connection,
+}
+impl SqliteDB2 {
+    pub fn new(path: &str) -> Self {
+        Self {
+            tables: HashSet::new(),
+            connection: Connection::open(path).unwrap(),
+        }
+    }
+}
+
+impl Database2 for SqliteDB2 {
+    fn create_table<T: DatabaseInsertable>(&mut self) -> Result<(), CustomErrs> {
+        let table_name = T::get_name();
+        let columns = T::columns();
+        let mut column_defs = Vec::new();
+
+        column_defs.push("Position INTEGER PRIMARY KEY AUTOINCREMENT".to_owned());
+
+        columns
+            .iter()
+            .for_each(|v| column_defs.push(format!("{} TEXT", v)));
+
+        let create_stmt = format!(
+            "CREATE TABLE IF NOT EXISTS {} ({})",
+            table_name,
+            column_defs.join(", ")
+        );
+
+        self.connection
+            .execute(&create_stmt, [])
+            .map_err(|_| CustomErrs::CannotCreateSuchTable)?;
+
+        self.tables.insert(table_name.to_string());
+
+        Ok(())
+    }
+
+    fn len(&self, table_name: &str) -> i64 {
+        let mut stmt = self
+            .connection
+            .prepare(&format!("SELECT COUNT(*) FROM {}", table_name))
+            .unwrap();
+        let count = stmt.query_row([], |row| row.get(0)).unwrap();
+        count
+    }
+
+    fn get_tables(&self) -> &HashSet<String> {
+        &self.tables
+    }
+
+    fn insert_row<T: DatabaseInsertable>(&self, items: &[String]) -> Result<(), CustomErrs> {
+        let table_name = T::get_name();
+        let columns = T::columns();
+        let num_columns = columns.len();
+
+        let placeholders = vec!["?"; num_columns].join(", ");
+        let column_names = vec![columns[0..].join(", ")].join(", ");
+        let sql = format!(
+            "INSERT INTO {} ({}) VALUES ({})",
+            table_name, column_names, placeholders
+        );
+
+        let mut stmt = self.connection.prepare(&sql).unwrap();
+        let params = rusqlite::params_from_iter(items.iter().map(|x| x as &dyn ToSql));
+
+        stmt.execute(params).unwrap();
+
+        Ok(())
+    }
+
+    fn get_tables_mut(&mut self) -> &mut HashSet<String> {
+        &mut self.tables
     }
 }

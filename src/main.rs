@@ -2,7 +2,7 @@ use blockchain::{
     block,
     blockchain::{Block, BlockChain, Record, SignedRecord},
     gen,
-    utils::{SqliteDB, Transaction},
+    utils::{SqliteDB2, Transaction},
 };
 
 fn main() {
@@ -17,28 +17,10 @@ fn main() {
 
     let block: Block<Transaction> = block![signed_trans1, signed_trans2];
 
-    // You can pass your database connection to this wrapper
-    let database: SqliteDB = SqliteDB::open(r"db\database.db").unwrap();
-
-    let blockchain: BlockChain<SqliteDB, Transaction> = BlockChain::open(database);
+    let mut blockchain: BlockChain<SqliteDB2> = BlockChain::open(SqliteDB2::new(r"db\database.db"));
 
     match blockchain.push(&block) {
         Ok(feedback) => println!("Success! {:?}", feedback),
         Err(err) => println!("Failure! {:?}", err),
     }
-
-    // DataBase structure
-
-    //Table 1 name = records
-    /*
-    Position -> Primary Key number
-    Record -> encrypted or unencrypted message text
-    Identity -> Public Key text
-    Signature -> Digital Signature text
-    // requires private key to decrypt the Record if the record is an encrypted one
-
-    //Table 2 name = hash
-    Hash -> Primary Key text
-    BlockPosition -> text
-    */
 }

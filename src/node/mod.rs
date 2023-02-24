@@ -5,22 +5,21 @@ use std::{
 };
 
 use crate::{
-    blockchain::{Block, BlockChain, FeedBack, Record, SignedRecord, VerifiedBlock},
+    blockchain::{Block, BlockChain, FeedBack, Record, SignedRecord},
     errs::CustomErrs,
-    io::Database,
+    io::Database2,
     utils::Entity,
 };
 
 #[derive(Clone, Debug)]
 pub struct NodeId {
-    id: u128,
-    address: String,
+    pub id: u128,
+    pub address: String,
 }
 
-
-pub struct Node<D: Database<R>, R: Record> {
+pub struct Node<D: Database2, R: Record> {
     /// An instance of the blockchain held by this node
-    pub chain: Arc<Mutex<BlockChain<D, R>>>,
+    pub chain: Arc<Mutex<BlockChain<D>>>,
 
     /// Contains a unique identifier for this Node
     /// and it's associated Ip Address
@@ -36,15 +35,19 @@ pub struct Node<D: Database<R>, R: Record> {
     /// Only records between members of this Node are kept within this node
     pub transactions: Arc<Mutex<HashMap<u32, HashSet<R>>>>,
 
-    /// A blockchain that contains transactions between peers in this node
-    pub local_chain: BlockChain<D, R>,
+    /// A copy of the blockchain containing records that
+    /// are relevant to peers in this Node
+    ///
+    pub local_chain: BlockChain<D>,
 
     /// Network of nodes connected to this node
+    ///
     /// A network can be for diverse purposes
     pub network: Arc<Mutex<Vec<NodeId>>>,
 }
 
-impl<D: Database<R>, R: Record> Node<D, R> {
+#[allow(unused)]
+impl<D: Database2, R: Record> Node<D, R> {
     pub fn new() -> Self {
         Self {
             chain: todo!(),
@@ -65,7 +68,7 @@ impl<D: Database<R>, R: Record> Node<D, R> {
     }
 
     /// Makes all peers in the Node aware of the published block
-    pub fn broadcast_block(&self, feed_back: FeedBack<R>) {
+    pub fn broadcast_block(&mut self, feed_back: FeedBack<R>) {
         self.peers
             .iter()
             .for_each(|peer| peer.receive_broadcast(&feed_back, self.id.clone()));
@@ -80,7 +83,21 @@ impl<D: Database<R>, R: Record> Node<D, R> {
         todo!()
     }
 
-    pub fn push_local(&self, block: &Block<R>) -> Result<FeedBack<R>, CustomErrs> {
+    /// Puts the block in the local database
+    /// Local Database contains records that are relevant to members of this Node
+    pub fn push_local(&mut self, block: &Block<R>) -> Result<FeedBack<R>, CustomErrs> {
         self.local_chain.push(block)
     }
+}
+
+///
+/// Struct for managing communications between entities and Nodes
+///
+///
+///
+///
+///
+
+pub struct Mng<D: Database2> {
+    pub db: D,
 }

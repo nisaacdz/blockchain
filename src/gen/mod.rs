@@ -18,12 +18,6 @@ pub struct Hash {
     data: Hxsh,
 }
 
-impl ToString for Hash {
-    fn to_string(&self) -> String {
-        serde_json::to_string(self.data.as_slice()).unwrap()
-    }
-}
-
 impl Debug for Hash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.as_slice().fmt(f)
@@ -50,32 +44,7 @@ pub fn validate<T: Sized + Serialize>(obj: &T, hash: Hash) -> bool {
     hash.data == encrypt(obj).data
 }
 
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature as D_Signature, Signer, Verifier};
-
-#[derive(Debug, Serialize, Clone)]
-pub struct Signature {
-    pub data: Vec<u8>,
-}
-
-impl Signature {
-    /// Creates a custom Signature for Dalek Signature
-    /// Dalek Signature doesn't implement Serialize which will be important
-    ///
-    pub fn from(dalek: D_Signature) -> Self {
-        Self {
-            data: dalek.as_ref().to_vec(),
-        }
-    }
-
-    pub fn to_dalek(&self) -> Result<D_Signature, CustomErrs> {
-        let dalek = D_Signature::from_bytes(&self.data).map_err(|_| CustomErrs::InvalidSignature)?;
-        Ok(dalek)
-    }
-
-    pub fn as_ref(&self) -> &[u8] {
-        &self.data
-    }
-}
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier};
 
 ///
 ///  Generates ed25519 key pairs in the form (public_key, private_key)
@@ -99,7 +68,7 @@ pub fn generate_key_pair() -> (Vec<u8>, Vec<u8>) {
     (public_key, private_key)
 }
 
-pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, CustomErrs> {
+pub fn sign(msg: &[u8], key: &[u8]) -> Result<Vec<u8>, CustomErrs> {
     // Parse the private key
     match SecretKey::from_bytes(key) {
         Ok(secret) => {
@@ -108,15 +77,15 @@ pub fn sign(msg: &[u8], key: &[u8]) -> Result<Signature, CustomErrs> {
                 public: PublicKey::from(&secret),
                 secret,
             };
-            let signature: D_Signature = keypair.sign(msg);
-            Ok(Signature::from(signature))
+            let signature = keypair.sign(msg);
+            Ok(signature.as_ref().to_vec())
         }
         Err(_) => Err(CustomErrs::InvalidPrivateKey),
     }
 }
 
-pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: &Signature) -> Result<(), CustomErrs> {
-    let dalek = signature.to_dalek()?;
+pub fn verify_signature(public_key: &[u8], msg: &[u8], signature: &[u8]) -> Result<(), CustomErrs> {
+    let dalek = Signature::from_bytes(signature).map_err(|_| CustomErrs::InvalidSignature)?;
     match PublicKey::from_bytes(public_key) {
         Ok(key) => match key.verify(msg, &dalek) {
             Ok(_) => Ok(()),
