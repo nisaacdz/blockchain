@@ -1,4 +1,4 @@
-pub mod blockchain;
+pub mod chain;
 pub mod errs;
 pub mod gen;
 pub mod io;

@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    blockchain::{Block, BlockChain, FeedBack, Record, SignedRecord},
+    chain::{Block, BlockChain, FeedBack, Record, SignedRecord},
     errs::CustomErrs,
     io::Database2,
     utils::Entity,

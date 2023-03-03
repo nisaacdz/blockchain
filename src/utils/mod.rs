@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     block,
-    blockchain::{Block, FeedBack, PublishedBlock, Record, SignedRecord},
+    chain::{Block, FeedBack, PublishedBlock, Record, SignedRecord},
     errs::CustomErrs,
     io::{Database, Database2, DatabaseInsertable},
     node::NodeId,
@@ -23,6 +23,7 @@ pub trait Entity<T: Record> {
     fn sign_record(&self, record: T, pkey: &[u8]) -> Result<SignedRecord<T>, CustomErrs> {
         record.sign(pkey, &self.public_key())
     }
+    
     fn receive_broadcast(&self, block: &FeedBack<T>, from_node: NodeId);
 }
 

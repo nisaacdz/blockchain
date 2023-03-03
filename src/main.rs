@@ -1,6 +1,6 @@
 use blockchain::{
     block,
-    blockchain::{Block, BlockChain, Record, SignedRecord},
+    chain::{Block, BlockChain, Record, SignedRecord},
     gen,
     utils::{SqliteDB2, Transaction},
 };

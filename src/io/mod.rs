@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::{
-    blockchain::{Block, PublishedBlock, Record, SignedRecord},
+    chain::{Block, PublishedBlock, Record, SignedRecord},
     errs::CustomErrs,
 };
 
@@ -59,11 +59,6 @@ pub trait DatabaseInsertable {
     fn len(&self) -> i64;
 }
 
-pub trait Row<T> {
-    fn next(&mut self) -> T {
-        unimplemented!()
-    }
-}
 
 pub trait Database2 {
     /// Creates a new table with the given name, if table doesn't already exist.
