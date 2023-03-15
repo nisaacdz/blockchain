@@ -1,3 +1,9 @@
+## Outdated! No longer Maintained. See instead [blockify](https://github.com/nisaacdz/blockify)
+
+
+
+
+
 # BLOCKCHAIN   
 
 # Rust Blockchain Implementation
