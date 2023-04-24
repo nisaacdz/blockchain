@@ -1,4 +1,4 @@
-## Outdated! No longer Maintained. See instead [blockify](https://github.com/nisaacdz/blockify)
+## Outdated! Renamed to Blockify. See instead [blockify](https://github.com/nisaacdz/blockify)
 
 
 
